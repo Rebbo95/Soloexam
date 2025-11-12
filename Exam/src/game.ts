@@ -10,6 +10,7 @@ let enemies: Enemy[] = [];
 let keys: Record<string, boolean> = {};
 let classes: Player[] = [];
 let currentClass: ClassId | null = null;
+const enemy = enemies[0];
 
 // attack/cooldown and damage popups
 let lastAttackTime = 0;
@@ -113,7 +114,6 @@ function movePlayer(): void {
   if (keys["a"]) player.x -= player.stats.speed;
   if (keys["d"]) player.x += player.stats.speed;
 }
-
 function playerAttack(): void {
   if (!player || enemies.length === 0) return;
   if (!keys["t"]) return;
@@ -122,13 +122,23 @@ function playerAttack(): void {
   if (now - lastAttackTime < ATTACK_COOLDOWN) return;
   lastAttackTime = now;
 
-  const target = enemies[0];
+ 
   const damage = player.stats.damage;
-  target.hp -= damage;
+  enemy.hp -= damage;
 
-  enemyKilled();
+  // Show damage popup
+  damagePopups.push({
+    x: enemy.x,
+    y: enemy.y - 15,
+    text: `-${damage}`,
+    life: 800,
+    alpha: 1,
+    vy: -0.03,
+    color: "yellow",
+  });
+
+  checkEnemyDeath(enemy);
 }
-
 /** Cast a spell by index, trigger per key press */
 function playerCastSpells(): void {
   if (!player || enemies.length === 0) return;
@@ -147,42 +157,35 @@ function playerCastSpells(): void {
     const dmg = Number(spell.damage ?? 0);
     target.hp -= dmg;
 
-   enemyKilled();
+    checkEnemyDeath(enemy);
 
   
     }
   }
+async function checkEnemyDeath(enemy: Enemy): Promise<void> {
+  if (enemy.hp > 0) return;
 
-async function enemyKilled(): Promise<void> {
-  if (!player || enemies.length === 0) return;
+  // Death popup
+  damagePopups.push({
+    x: enemy.x,
+    y: enemy.y,
+    text: "Enemy defeated!",
+    life: 1000,
+    alpha: 1,
+    vy: -0.02,
+    color: "white",
+  });
 
-  const enemy = enemies[0];
-  const damage = player.stats.damage;
-  enemy.hp -= damage;
+  // Remove defeated enemy
+  enemies.shift();
 
-  if (enemy.hp <= 0) {
-    // Show defeat popup
-    damagePopups.push({
-      x: enemy.x,
-      y: enemy.y,
-      text: "Enemy defeated!",
-      life: 1000,
-      alpha: 1,
-      vy: -0.02,
-      color: "white",
-    });
-
-    // Remove defeated enemy
-    enemies.shift();
-
-    // Spawn new enemy to replace it
-    if (enemies.length < 3) {
-      const [newEnemy] = await fetchEnemies(1);
-      newEnemy.maxHp = newEnemy.hp;
-      newEnemy.x = Math.random() * ctx!.canvas.width;
-      newEnemy.y = Math.random() * ctx!.canvas.height;
-      enemies.push(newEnemy);
-    }
+  // Spawn new enemy to replace it
+  if (enemies.length < 3) {
+    const [newEnemy] = await fetchEnemies(1);
+    newEnemy.maxHp = newEnemy.hp;
+    newEnemy.x = Math.random() * ctx!.canvas.width;
+    newEnemy.y = Math.random() * ctx!.canvas.height;
+    enemies.push(newEnemy);
   }
 }
 

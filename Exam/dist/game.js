@@ -17,6 +17,7 @@ let enemies = [];
 let keys = {};
 let classes = [];
 let currentClass = null;
+const enemy = enemies[0];
 // attack/cooldown and damage popups
 let lastAttackTime = 0;
 const ATTACK_COOLDOWN = 300; // ms
@@ -122,10 +123,19 @@ function playerAttack() {
     if (now - lastAttackTime < ATTACK_COOLDOWN)
         return;
     lastAttackTime = now;
-    const target = enemies[0];
     const damage = player.stats.damage;
-    target.hp -= damage;
-    enemyKilled();
+    enemy.hp -= damage;
+    // Show damage popup
+    damagePopups.push({
+        x: enemy.x,
+        y: enemy.y - 15,
+        text: `-${damage}`,
+        life: 800,
+        alpha: 1,
+        vy: -0.03,
+        color: "yellow",
+    });
+    checkEnemyDeath(enemy);
 }
 /** Cast a spell by index, trigger per key press */
 function playerCastSpells() {
@@ -145,37 +155,32 @@ function playerCastSpells() {
         const target = enemies[0];
         const dmg = Number((_b = spell.damage) !== null && _b !== void 0 ? _b : 0);
         target.hp -= dmg;
-        enemyKilled();
+        checkEnemyDeath(enemy);
     }
 }
-function enemyKilled() {
+function checkEnemyDeath(enemy) {
     return __awaiter(this, void 0, void 0, function* () {
-        if (!player || enemies.length === 0)
+        if (enemy.hp > 0)
             return;
-        const enemy = enemies[0];
-        const damage = player.stats.damage;
-        enemy.hp -= damage;
-        if (enemy.hp <= 0) {
-            // Show defeat popup
-            damagePopups.push({
-                x: enemy.x,
-                y: enemy.y,
-                text: "Enemy defeated!",
-                life: 1000,
-                alpha: 1,
-                vy: -0.02,
-                color: "white",
-            });
-            // Remove defeated enemy
-            enemies.shift();
-            // Spawn new enemy to replace it
-            if (enemies.length < 3) {
-                const [newEnemy] = yield fetchEnemies(1);
-                newEnemy.maxHp = newEnemy.hp;
-                newEnemy.x = Math.random() * ctx.canvas.width;
-                newEnemy.y = Math.random() * ctx.canvas.height;
-                enemies.push(newEnemy);
-            }
+        // Death popup
+        damagePopups.push({
+            x: enemy.x,
+            y: enemy.y,
+            text: "Enemy defeated!",
+            life: 1000,
+            alpha: 1,
+            vy: -0.02,
+            color: "white",
+        });
+        // Remove defeated enemy
+        enemies.shift();
+        // Spawn new enemy to replace it
+        if (enemies.length < 3) {
+            const [newEnemy] = yield fetchEnemies(1);
+            newEnemy.maxHp = newEnemy.hp;
+            newEnemy.x = Math.random() * ctx.canvas.width;
+            newEnemy.y = Math.random() * ctx.canvas.height;
+            enemies.push(newEnemy);
         }
     });
 }
