@@ -1,0 +1,115 @@
+/* Global layout */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background:
+    radial-gradient(circle at top, #3a0f0f 0, #050505 55%, #000 100%);
+  color: #f5e9d6;
+  font-family: "Trajan Pro", "Cinzel", "Georgia", serif;
+}
+
+/* Centered game wrapper */
+
+.app {
+  position: relative;
+  padding: 16px;
+  background:
+    radial-gradient(circle at top, rgba(255, 255, 255, 0.05), transparent),
+    rgba(0, 0, 0, 0.9);
+  border-radius: 16px;
+  box-shadow:
+    0 0 24px rgba(0, 0, 0, 0.9),
+    0 0 40px rgba(255, 40, 0, 0.25);
+  border: 2px solid rgba(150, 20, 10, 0.8);
+}
+
+/* Game canvas styling */
+canvas#game {
+  display: block;
+  width: 800px;
+  height: 480px;
+  background:
+    radial-gradient(circle at center, #151515 0, #050505 100%);
+  border-radius: 8px;
+  border: 2px solid #6b150f;
+  box-shadow:
+    inset 0 0 16px rgba(0, 0, 0, 0.9),
+    0 0 24px rgba(0, 0, 0, 0.8);
+}
+
+/* Class selection modal */
+
+#class-menu {
+  position: absolute;
+  
+
+  z-index: 10;
+  
+  box-shadow:
+    0 0 24px rgba(0, 0, 0, 0.95),
+    0 0 18px rgba(255, 80, 40, 0.3);
+}
+
+.class-menu-title { margin-bottom: 12px; color: #ffb14a; }
+
+.class-menu-button {
+  background: linear-gradient(to bottom, #552019, #2b0b08);
+  color: #f5e9d6;
+  border: 1px solid #a13b1f;
+  border-radius: 6px;
+  font-family: "Cinzel", "Georgia", serif;
+  font-size: 14px;
+
+  text-transform: uppercase;
+  
+  
+  transition:
+    transform 0.1s ease,
+    box-shadow 0.1s ease,
+    border-color 0.1s ease;
+  padding: 10px 20px;
+  cursor: pointer;
+}
+
+.class-menu-button:hover {
+  border-color: #ffb14a;
+  box-shadow: 0 0 10px rgba(255, 145, 60, 0.4);
+  transform: translateY(-2px);
+}
+
+.class-menu-button:active {
+  transform: translateY(1px);
+  box-shadow: none;
+}
+
+/* HUD Overlay */
+
+.hud-overlay {
+  position: absolute;
+  left: 16px;
+  top: 16px;
+  color: #f5e9d6;
+  font-size: 13px;
+  text-shadow: 0 0 4px #000;
+}
+
+
+
+h1,
+h2 {
+  color: #ffb14a;
+  text-align: center;
+  margin-bottom: 8px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  font-weight: 500;
+}
