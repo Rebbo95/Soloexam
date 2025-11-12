@@ -11,13 +11,13 @@ import { fetchEnemies, fetchPlayerClasses } from "./api.js";
 import { saveLastClass, loadSavedData } from "./storage.js";
 import { fetchClassSpells } from "./spells.js";
 import { drawHUD, drawDamagePopups } from "./ui.js";
+import { incrementKillCount } from "./ui.js";
 let ctx = null;
 let player = null;
 let enemies = [];
 let keys = {};
 let classes = [];
 let currentClass = null;
-const enemy = enemies[0];
 // attack/cooldown and damage popups
 let lastAttackTime = 0;
 const ATTACK_COOLDOWN = 300; // ms
@@ -123,9 +123,9 @@ function playerAttack() {
     if (now - lastAttackTime < ATTACK_COOLDOWN)
         return;
     lastAttackTime = now;
+    const enemy = enemies[0]; // must be inside
     const damage = player.stats.damage;
     enemy.hp -= damage;
-    // Show damage popup
     damagePopups.push({
         x: enemy.x,
         y: enemy.y - 15,
@@ -137,7 +137,6 @@ function playerAttack() {
     });
     checkEnemyDeath(enemy);
 }
-/** Cast a spell by index, trigger per key press */
 function playerCastSpells() {
     var _a, _b;
     if (!player || enemies.length === 0)
@@ -149,12 +148,20 @@ function playerCastSpells() {
         const key = String(i + 1);
         if (!keys[key])
             continue;
-        // single trigger
         keys[key] = false;
         const spell = spells[i];
-        const target = enemies[0];
+        const enemy = enemies[0]; // also inside
         const dmg = Number((_b = spell.damage) !== null && _b !== void 0 ? _b : 0);
-        target.hp -= dmg;
+        enemy.hp -= dmg;
+        damagePopups.push({
+            x: enemy.x,
+            y: enemy.y - 15,
+            text: `-${dmg} (${spell.name})`,
+            life: 900,
+            alpha: 1,
+            vy: -0.04,
+            color: "orange",
+        });
         checkEnemyDeath(enemy);
     }
 }
@@ -162,7 +169,6 @@ function checkEnemyDeath(enemy) {
     return __awaiter(this, void 0, void 0, function* () {
         if (enemy.hp > 0)
             return;
-        // Death popup
         damagePopups.push({
             x: enemy.x,
             y: enemy.y,
@@ -172,9 +178,9 @@ function checkEnemyDeath(enemy) {
             vy: -0.02,
             color: "white",
         });
-        // Remove defeated enemy
+        // Increase kill count
+        incrementKillCount();
         enemies.shift();
-        // Spawn new enemy to replace it
         if (enemies.length < 3) {
             const [newEnemy] = yield fetchEnemies(1);
             newEnemy.maxHp = newEnemy.hp;

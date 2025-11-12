@@ -3,6 +3,7 @@ import { Player, Enemy, ClassId, DamagePopup } from "./types.js";
 import { saveLastClass, loadSavedData } from "./storage.js";
 import { fetchClassSpells } from "./spells.js";
 import { drawHUD, drawDamagePopups } from "./ui.js";
+import { incrementKillCount } from "./ui.js";
 
 let ctx: CanvasRenderingContext2D | null = null;
 let player: Player | null = null;
@@ -10,7 +11,7 @@ let enemies: Enemy[] = [];
 let keys: Record<string, boolean> = {};
 let classes: Player[] = [];
 let currentClass: ClassId | null = null;
-const enemy = enemies[0];
+
 
 // attack/cooldown and damage popups
 let lastAttackTime = 0;
@@ -122,11 +123,10 @@ function playerAttack(): void {
   if (now - lastAttackTime < ATTACK_COOLDOWN) return;
   lastAttackTime = now;
 
- 
+  const enemy = enemies[0]; // must be inside
   const damage = player.stats.damage;
   enemy.hp -= damage;
 
-  // Show damage popup
   damagePopups.push({
     x: enemy.x,
     y: enemy.y - 15,
@@ -139,7 +139,7 @@ function playerAttack(): void {
 
   checkEnemyDeath(enemy);
 }
-/** Cast a spell by index, trigger per key press */
+
 function playerCastSpells(): void {
   if (!player || enemies.length === 0) return;
   const spells = player.spells ?? [];
@@ -148,24 +148,31 @@ function playerCastSpells(): void {
   for (let i = 0; i < spells.length; i++) {
     const key = String(i + 1);
     if (!keys[key]) continue;
-
-    // single trigger
     keys[key] = false;
 
-    const spell = spells[i] as any;
-    const target = enemies[0];
+    const spell = spells[i];
+    const enemy = enemies[0]; // also inside
     const dmg = Number(spell.damage ?? 0);
-    target.hp -= dmg;
+    enemy.hp -= dmg;
+
+    damagePopups.push({
+      x: enemy.x,
+      y: enemy.y - 15,
+      text: `-${dmg} (${spell.name})`,
+      life: 900,
+      alpha: 1,
+      vy: -0.04,
+      color: "orange",
+    });
 
     checkEnemyDeath(enemy);
-
-  
-    }
   }
+}
+
+
 async function checkEnemyDeath(enemy: Enemy): Promise<void> {
   if (enemy.hp > 0) return;
 
-  // Death popup
   damagePopups.push({
     x: enemy.x,
     y: enemy.y,
@@ -176,10 +183,11 @@ async function checkEnemyDeath(enemy: Enemy): Promise<void> {
     color: "white",
   });
 
-  // Remove defeated enemy
+  // Increase kill count
+  incrementKillCount();
+
   enemies.shift();
 
-  // Spawn new enemy to replace it
   if (enemies.length < 3) {
     const [newEnemy] = await fetchEnemies(1);
     newEnemy.maxHp = newEnemy.hp;
